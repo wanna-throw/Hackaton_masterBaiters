@@ -55,34 +55,89 @@ const Hero = () => {
           <span className="text-white/80">legislación</span>
         </motion.h1>
 
+        {/* Mode selection buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="flex flex-col sm:flex-row gap-5"
+        >
+          {[
+            { label: 'Simulador de Leyes', img: '/img/simulador_leyes.png' },
+            { label: 'Dashboard Estadístico', img: '/img/dashboard_estadistico.png' },
+          ].map((mode) => (
+            <button
+              key={mode.label}
+              type="button"
+              className="group relative w-64 rounded-2xl overflow-hidden border border-white/8 hover:border-cyan-500/40 transition-all duration-500 cursor-pointer"
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10" />
+              <img
+                src={mode.img}
+                alt={mode.label}
+                className="w-full h-36 object-cover group-hover:scale-110 transition-transform duration-700"
+              />
+              <div className="absolute bottom-0 left-0 right-0 z-20 p-4">
+                <span className="text-sm font-semibold text-white group-hover:text-cyan-300 transition-colors duration-300">
+                  {mode.label}
+                </span>
+              </div>
+            </button>
+          ))}
+        </motion.div>
+
         {/* Search bar */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.25 }}
-          className="w-full max-w-4xl mx-auto"
+          className="w-full max-w-2xl mx-auto"
         >
           <form onSubmit={handleSubmit} className="relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 via-cyan-400/10 to-cyan-500/20 rounded-2xl blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
-            <div className="relative flex items-center bg-zinc-900/80 border border-white/10 rounded-3xl p-4 backdrop-blur-xl focus-within:border-cyan-500/40 transition-all duration-500">
-              <div className="pl-6 text-zinc-500">
-                <Search size={28} />
+            <div className="relative flex items-center bg-zinc-900/80 border border-white/10 rounded-2xl p-2 backdrop-blur-xl focus-within:border-cyan-500/40 transition-all duration-500">
+              <div className="pl-4 text-zinc-500">
+                <Search size={20} />
               </div>
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Describe lo que buscas, ej: ¿Cómo me afecta la nueva ley de alquileres?"
-                className="w-full py-7 px-5 text-lg sm:text-xl text-white placeholder:text-zinc-600 bg-transparent outline-none"
+                placeholder="Pregunta sobre vivienda, leyes o hipotecas..."
+                className="w-full py-4 px-3 text-base text-white placeholder:text-zinc-600 bg-transparent outline-none"
               />
               <button
                 type="submit"
-                className="flex-shrink-0 bg-gradient-to-r from-cyan-500 to-cyan-400 text-black p-5 rounded-2xl hover:brightness-110 transition-all duration-300 hover:scale-105"
+                className="flex-shrink-0 bg-gradient-to-r from-cyan-500 to-cyan-400 text-black p-3 rounded-xl hover:brightness-110 transition-all duration-300 hover:scale-105"
               >
-                <ArrowRight size={24} />
+                <ArrowRight size={20} />
               </button>
             </div>
           </form>
+
+          {/* Autocomplete suggestions */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="flex flex-wrap justify-center gap-2 mt-5"
+          >
+            {[
+              '¿Cómo me afecta la ley de alquileres?',
+              'Calcular hipoteca',
+              'Precio medio alquiler Barcelona',
+              'Comparar leyes de vivienda',
+            ].map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => setQuery(suggestion)}
+                className="px-4 py-2 text-sm text-zinc-400 bg-white/5 border border-white/8 rounded-full hover:bg-cyan-500/10 hover:border-cyan-500/30 hover:text-cyan-300 transition-all duration-300 cursor-pointer"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </motion.div>
         </motion.div>
       </div>
     </section>
