@@ -79,6 +79,28 @@ body {
   filter: blur(80px);
 }
 
+/* ── Modes diagonal background ────────────────────────── */
+.modes-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.03) 0px,
+      rgba(255, 255, 255, 0.03) 1px,
+      transparent 1px,
+      transparent 40px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.03) 0px,
+      rgba(255, 255, 255, 0.03) 1px,
+      transparent 1px,
+      transparent 40px
+    );
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 30%, transparent 100%);
+}
+
 /* ── Mode cards ────────────────────────────────────────── */
 .mode-card {
   background: rgba(255, 255, 255, 0.025);

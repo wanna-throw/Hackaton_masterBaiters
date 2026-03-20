@@ -1,118 +1,60 @@
-import { Scale, Calculator, LineChart, ArrowLeftRight } from 'lucide-react';
 import { motion } from 'motion/react';
-import type { LucideIcon } from 'lucide-react';
 
-interface ModeCardProps {
-  title: string;
-  icon: LucideIcon;
-  description: string;
-  index: number;
-}
-
-const ModeCard = ({ title, icon: Icon, description, index }: ModeCardProps) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.1, duration: 0.5 }}
-      whileHover={{ y: -6, scale: 1.02 }}
-      className="mode-card group cursor-pointer"
-    >
-      <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-6 group-hover:bg-cyan-500 group-hover:text-black group-hover:border-cyan-500 transition-all duration-500">
-        <Icon size={26} />
-      </div>
-      <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
-      <p className="text-zinc-500 leading-relaxed text-sm mb-6">{description}</p>
-      <div className="flex items-center gap-2 text-sm font-semibold text-zinc-500 group-hover:text-cyan-400 transition-colors duration-300">
-        <span>Explorar</span>
-        <svg
-          className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-        </svg>
-      </div>
-    </motion.div>
-  );
-};
-
-const modes = [
-  {
-    title: 'Simulador de leyes',
-    icon: Scale,
-    description:
-      'Analiza cómo te afectan las nuevas normativas de vivienda y alquiler de forma personalizada.',
-  },
-  {
-    title: 'Simulador de Hipoteca/Alquiler',
-    icon: Calculator,
-    description:
-      'Calcula cuotas, gastos e impuestos para tomar la mejor decisión financiera en tu próxima vivienda.',
-  },
-  {
-    title: 'Estadísticas Históricas',
-    icon: LineChart,
-    description:
-      'Visualiza la evolución de los precios y tendencias del mercado inmobiliario en tu zona.',
-  },
-  {
-    title: 'Comparador de leyes y estadísticas',
-    icon: ArrowLeftRight,
-    description:
-      'Compara diferentes escenarios legislativos y datos de mercado para entender el impacto real.',
-  },
+const tools = [
+  { label: 'Simulador de Leyes', img: '/img/sim_leyes_card.png' },
+  { label: 'Sim. Hipoteca/Alquiler', img: '/img/sim_hipoteca_card.png' },
+  { label: 'Estadísticas Históricas', img: '/img/estadisticas_card.png' },
+  { label: 'Comparador', img: '/img/comparador_card.png' },
 ];
 
 const Modes = () => {
   return (
-    <section id="modes" className="py-32 lg:py-40 bg-black">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        {/* Section header */}
-        <div className="text-center mb-20">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 mb-8"
-          >
-            <span className="text-sm text-cyan-400 font-medium">Herramientas</span>
-          </motion.div>
+    <section id="modes" className="relative py-28 lg:py-36 bg-black overflow-hidden">
+      <div className="modes-grid" />
 
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.05 }}
-            className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight"
-          >
-            Explora nuestras herramientas
-          </motion.h2>
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
+        {/* Title */}
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight mb-16"
+        >
+          <span className="underline decoration-cyan-500 decoration-2 underline-offset-8">
+            Nuestras Herramientas:
+          </span>
+        </motion.h2>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-zinc-500 max-w-2xl mx-auto text-lg"
-          >
-            Diseñadas para darte claridad y control sobre tus decisiones inmobiliarias.
-          </motion.p>
-        </div>
+        {/* 1×4 image button grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+          {tools.map((tool, i) => (
+            <motion.button
+              key={tool.label}
+              type="button"
+              initial={{ opacity: 0, y: 25 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1, duration: 0.5 }}
+              whileHover={{ y: -6, scale: 1.03 }}
+              className="group relative aspect-square rounded-2xl overflow-hidden border border-white/8 hover:border-cyan-500/40 transition-all duration-500 cursor-pointer"
+            >
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent z-10" />
 
-        {/* Cards grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
-          {modes.map((mode, index) => (
-            <ModeCard
-              key={mode.title}
-              title={mode.title}
-              icon={mode.icon}
-              description={mode.description}
-              index={index}
-            />
+              {/* Image */}
+              <img
+                src={tool.img}
+                alt={tool.label}
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              />
+
+              {/* Label */}
+              <div className="absolute bottom-0 left-0 right-0 z-20 p-5">
+                <span className="text-sm font-semibold text-white group-hover:text-cyan-300 transition-colors duration-300">
+                  {tool.label}
+                </span>
+              </div>
+            </motion.button>
           ))}
         </div>
       </div>

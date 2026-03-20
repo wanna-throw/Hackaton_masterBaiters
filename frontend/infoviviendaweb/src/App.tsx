@@ -1,6 +1,7 @@
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Modes from './components/Modes';
+import ComoFunciona from './components/ComoFunciona';
 import Footer from './components/Footer';
 
 export default function App() {
@@ -10,6 +11,7 @@ export default function App() {
       <main>
         <Hero />
         <Modes />
+        <ComoFunciona />
       </main>
       <Footer />
     </div>
