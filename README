@@ -1,1 +1,11 @@
-Webapp vivienda Hackaton IA 2026
+Webapp InfoVivienda Hackaton IA 2026
+
+Estructura del proyecto
+
+InfoVivienda
+|
+|-------- /frontend
+|
+|-------- /backend
+|
+/.env
