@@ -1,13 +1,39 @@
-import { motion } from 'motion/react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 
 const tools = [
-  { label: 'Simulador de Leyes', img: '/img/sim_leyes_card.png' },
-  { label: 'Sim. Hipoteca/Alquiler', img: '/img/sim_hipoteca_card.png' },
-  { label: 'Estadísticas Históricas', img: '/img/estadisticas_card.png' },
-  { label: 'Comparador', img: '/img/comparador_card.png' },
+  {
+    label: 'Simulador de Leyes',
+    img: '/img/sim_leyes_card.png',
+    desc: 'Analiza cómo te afectan las nuevas normativas de vivienda y alquiler de forma personalizada.',
+  },
+  {
+    label: 'Sim. Hipoteca/Alquiler',
+    img: '/img/sim_hipoteca_card.png',
+    desc: 'Calcula cuotas, gastos e impuestos para tomar la mejor decisión financiera en tu próxima vivienda.',
+  },
+  {
+    label: 'Estadísticas Históricas',
+    img: '/img/estadisticas_card.png',
+    desc: 'Visualiza la evolución de precios y tendencias del mercado inmobiliario en tu zona.',
+  },
+  {
+    label: 'Comparador',
+    img: '/img/comparador_card.png',
+    desc: 'Compara diferentes escenarios legislativos y datos de mercado para entender el impacto real.',
+  },
 ];
 
+const BlueTick = () => (
+  <svg width="18" height="12" viewBox="0 0 18 12" fill="none" className="inline-block ml-1.5 flex-shrink-0">
+    <path d="M1 6.5L4.5 10L10 2" stroke="#53BDEB" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M6 6.5L9.5 10L15 2" stroke="#53BDEB" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 const Modes = () => {
+  const [hovered, setHovered] = useState<number | null>(null);
+
   return (
     <section id="modes" className="relative py-28 lg:py-36 bg-black overflow-hidden">
       <div className="modes-grid" />
@@ -28,33 +54,59 @@ const Modes = () => {
         {/* 1×4 image button grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
           {tools.map((tool, i) => (
-            <motion.button
+            <motion.div
               key={tool.label}
-              type="button"
               initial={{ opacity: 0, y: 25 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
-              whileHover={{ y: -6, scale: 1.03 }}
-              className="group relative aspect-square rounded-2xl overflow-hidden border border-white/8 hover:border-cyan-500/40 transition-all duration-500 cursor-pointer"
+              className="relative"
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
             >
-              {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent z-10" />
+              <motion.button
+                type="button"
+                whileHover={{ y: -6, scale: 1.03 }}
+                className="group relative aspect-square w-full rounded-2xl overflow-hidden border border-white/8 hover:border-cyan-500/40 transition-all duration-500 cursor-pointer"
+              >
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent z-10" />
+                <img
+                  src={tool.img}
+                  alt={tool.label}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+                <div className="absolute bottom-0 left-0 right-0 z-20 p-5">
+                  <span className="text-sm font-semibold text-white group-hover:text-cyan-300 transition-colors duration-300">
+                    {tool.label}
+                  </span>
+                </div>
+              </motion.button>
 
-              {/* Image */}
-              <img
-                src={tool.img}
-                alt={tool.label}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-              />
-
-              {/* Label */}
-              <div className="absolute bottom-0 left-0 right-0 z-20 p-5">
-                <span className="text-sm font-semibold text-white group-hover:text-cyan-300 transition-colors duration-300">
-                  {tool.label}
-                </span>
-              </div>
-            </motion.button>
+              {/* WhatsApp-style tooltip */}
+              <AnimatePresence>
+                {hovered === i && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute left-1/2 -translate-x-1/2 top-full mt-3 z-30 w-56 pointer-events-none"
+                  >
+                    <div className="relative bg-zinc-900 rounded-xl px-4 py-3 shadow-2xl shadow-black/60 border border-white/5">
+                      {/* Bubble tail pointing up */}
+                      <div className="absolute left-1/2 -translate-x-1/2 -top-[7px] w-3.5 h-3.5 bg-zinc-900 rotate-45 border-l border-t border-white/5" />
+                      <p className="text-[13px] text-zinc-300 leading-relaxed">
+                        {tool.desc}
+                      </p>
+                      <div className="flex items-center justify-end mt-1.5 gap-0.5">
+                        <span className="text-[10px] text-zinc-600">21:37</span>
+                        <BlueTick />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           ))}
         </div>
       </div>
