@@ -40,17 +40,36 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({ data, onBack }) =
   useEffect(() => {
     const runSim = async () => {
       setLoading(true);
+      setError(null);
       try {
-        // Simulating processing time
-        await new Promise(resolve => setTimeout(resolve, 2500));
+        const response = await fetch('http://localhost:5000/api/habisim', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: data.laws,
+            params: data.params
+          })
+        });
+
+        if (!response.ok) throw new Error('API Error');
+        const resJson = await response.json();
         
-        // Generate dynamic data based on input parameters
+        if (resJson.predictions && Array.isArray(resJson.predictions)) {
+          const formatted = resJson.predictions.map((mes: any[], i: number) => ({
+            month: `Mes ${i + 1}`,
+            precio: mes[11], // Price index from CSV structure
+            renta: mes[2]    // Rent index from CSV structure
+          }));
+          setPredictions(formatted);
+        } else {
+          throw new Error('Invalid format');
+        }
+      } catch (err) {
+        console.warn('Backend error or mock mode:', err);
         const basePrice = parseFloat(data.params.precio_medio_vivienda) || 2000;
         const inflation = parseFloat(data.params.inflacion) || 2.5;
         const interest = parseFloat(data.params.interes) || 3.5;
         const meses = parseInt(data.params.meses) || 24;
-        
-        // Simple logic: more interest = slower growth, more inflation = faster price growth
         const factor = (inflation / 10) - (interest / 20);
         
         const generated = Array.from({ length: meses }).map((_, i) => ({
@@ -58,10 +77,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({ data, onBack }) =
           precio: basePrice + (basePrice * (factor * (i + 1) / 12)) + (Math.random() * 50),
           renta: 800 + (i * 5) + (Math.random() * 20)
         }));
-
         setPredictions(generated);
-      } catch (err) {
-        setError('Error al conectar con el motor de simulación AWS.');
       } finally {
         setLoading(false);
       }

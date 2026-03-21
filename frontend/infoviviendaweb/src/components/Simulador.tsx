@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 
 const API_URL = 'http://localhost:5000/api/chat';
+const API_URL_HABISIM = 'http://localhost:5000/api/habisim'; // Placeholder TODO: Connect to backend
 
 type SimMode = 'habisim' | 'hipotsim';
 
@@ -107,10 +108,10 @@ const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack, 
     let fullPrompt = userPrompt;
     if (chatHistoryRef.current.length === 0) {
       const systemCtx = mode === 'habisim' ? HABISIM_SYSTEM : HIPOTSIM_SYSTEM;
-      
+
       let paramsText = '';
       if (mode === 'habisim' && Object.keys(hParams).length > 0) {
-        paramsText = '\n\nParámetros estadísticos proporcionados para esta simulación:\n' + 
+        paramsText = '\n\nParámetros estadísticos proporcionados para esta simulación:\n' +
           Object.entries(hParams)
             .filter(([_, val]) => (val as string).trim() !== '')
             .map(([id, val]) => {
@@ -122,8 +123,16 @@ const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack, 
       fullPrompt = `${systemCtx}${paramsText}\n\n---\nConsulta del usuario:\n${userPrompt}`;
     }
 
+    const targetUrl = mode === 'habisim' ? API_URL_HABISIM : API_URL;
+
+    // If HabiSim, trigger navigation to results (which will handle the fetch to API_URL_HABISIM)
+    if (mode === 'habisim' && onSimulate) {
+      onSimulate(userPrompt, hParams);
+      return;
+    }
+
     try {
-      const res = await fetch(API_URL, {
+      const res = await fetch(targetUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -248,21 +257,19 @@ const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack, 
           <div className="hidden md:flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
             <button
               onClick={() => switchMode('habisim')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
-                mode === 'habisim'
-                  ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
+              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${mode === 'habisim'
+                ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20'
+                : 'text-zinc-400 hover:text-white'
+                }`}
             >
               HabiSim
             </button>
             <button
               onClick={() => switchMode('hipotsim')}
-              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
-                mode === 'hipotsim'
-                  ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
+              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${mode === 'hipotsim'
+                ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-white'
+                }`}
             >
               HipotSim
             </button>
@@ -300,11 +307,10 @@ const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack, 
               >
                 <div className="flex items-center gap-2 mb-3">
                   <div
-                    className={`w-8 h-8 rounded-full ${
-                      msg.role === 'user'
-                        ? 'bg-white/10'
-                        : `bg-gradient-to-br ${current.accent}`
-                    } flex items-center justify-center`}
+                    className={`w-8 h-8 rounded-full ${msg.role === 'user'
+                      ? 'bg-white/10'
+                      : `bg-gradient-to-br ${current.accent}`
+                      } flex items-center justify-center`}
                   >
                     {msg.role === 'user' ? (
                       <Users size={14} className="text-white" />
@@ -317,11 +323,10 @@ const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack, 
                   </p>
                 </div>
                 <div
-                  className={`border rounded-2xl px-6 py-6 text-white/85 text-[15px] leading-relaxed backdrop-blur-sm ${
-                    msg.role === 'user'
-                      ? 'bg-white/[0.03] border-white/10 ml-12'
-                      : 'bg-white/[0.02] border-white/6 mr-12'
-                  }`}
+                  className={`border rounded-2xl px-6 py-6 text-white/85 text-[15px] leading-relaxed backdrop-blur-sm ${msg.role === 'user'
+                    ? 'bg-white/[0.03] border-white/10 ml-12'
+                    : 'bg-white/[0.02] border-white/6 mr-12'
+                    }`}
                 >
                   {renderText(msg.text)}
                 </div>
@@ -425,7 +430,7 @@ const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack, 
                           onChange={(e) => {
                             const val = parseInt(e.target.value);
                             if (param.max && val > param.max) return;
-                            setHParams({...hParams, [param.id]: e.target.value});
+                            setHParams({ ...hParams, [param.id]: e.target.value });
                           }}
                           placeholder={`Ej: ${param.placeholder}`}
                           className="w-full py-2 px-3 text-xs text-white placeholder:text-zinc-600 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-cyan-500/40 focus:bg-white/[0.08] transition-all duration-300"
@@ -458,11 +463,10 @@ const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack, 
                   <button
                     onClick={() => prompt.trim() && !isLoading && sendMessage(prompt)}
                     disabled={!prompt.trim() || isLoading}
-                    className={`absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 rounded-xl flex items-center gap-2 transition-all duration-300 ${
-                      prompt.trim() && !isLoading
-                        ? `bg-gradient-to-br ${current.accent} text-black shadow-lg shadow-cyan-500/20`
-                        : 'bg-white/5 text-zinc-600 cursor-not-allowed'
-                    }`}
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 rounded-xl flex items-center gap-2 transition-all duration-300 ${prompt.trim() && !isLoading
+                      ? `bg-gradient-to-br ${current.accent} text-black shadow-lg shadow-cyan-500/20`
+                      : 'bg-white/5 text-zinc-600 cursor-not-allowed'
+                      }`}
                   >
                     {mode === 'habisim' ? (
                       <>
@@ -481,15 +485,13 @@ const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack, 
                   {mode === 'habisim' && (
                     <button
                       onClick={() => setShowParams(!showParams)}
-                      className={`flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 ${
-                        showParams ? 'text-cyan-400' : 'text-zinc-500 hover:text-white'
-                      }`}
+                      className={`flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 ${showParams ? 'text-cyan-400' : 'text-zinc-500 hover:text-white'
+                        }`}
                     >
                       <ChevronDown
                         size={16}
-                        className={`transition-transform duration-300 ${
-                          showParams ? 'rotate-180' : ''
-                        }`}
+                        className={`transition-transform duration-300 ${showParams ? 'rotate-180' : ''
+                          }`}
                       />
                       {showParams ? 'Ocultar Parámetros' : 'Ver Parámetros Avanzados'}
                     </button>
