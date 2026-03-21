@@ -2,11 +2,8 @@ import json
 import requests
 import os
 import pandas as pd
-from dotenv import load_dotenv
 
-load_dotenv()
-
-HF_TOKEN = ""
+HF_TOKEN = "your_huggingface_token_here"
 LLM_API_URL = "https://api-inference.huggingface.co/models/modelo-llm"
 PREDICT_API_URL = "https://api-inference.huggingface.co/models/modelo-predictivo"
 
