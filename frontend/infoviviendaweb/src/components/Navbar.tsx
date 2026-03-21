@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const simSubLinks = [
-  { label: 'Sim de Leyes', href: '#sim-leyes' },
-  { label: 'Sim de Hipoteca/Alquiler', href: '#sim-hipoteca' },
+  { label: 'Sim de Leyes', mode: 'habisim' as const },
+  { label: 'Sim de Hipoteca/Alquiler', mode: 'hipotsim' as const },
 ];
 
 const navLinks = [
@@ -13,7 +13,11 @@ const navLinks = [
   { label: '¿Cómo funciona?', href: '#como-funciona' },
 ];
 
-const Navbar = () => {
+interface NavbarProps {
+  onOpenSimulador: (mode: 'habisim' | 'hipotsim') => void;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ onOpenSimulador }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [simOpen, setSimOpen] = useState(false);
   const [simMobileOpen, setSimMobileOpen] = useState(false);
@@ -70,14 +74,13 @@ const Navbar = () => {
                     className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-56 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl shadow-black/50"
                   >
                     {simSubLinks.map((sub) => (
-                      <a
+                      <button
                         key={sub.label}
-                        href={sub.href}
-                        onClick={() => setSimOpen(false)}
-                        className="block px-5 py-3.5 text-sm text-zinc-400 hover:text-cyan-300 hover:bg-white/5 transition-all duration-200"
+                        onClick={() => { setSimOpen(false); onOpenSimulador(sub.mode); }}
+                        className="block w-full text-left px-5 py-3.5 text-sm text-zinc-400 hover:text-cyan-300 hover:bg-white/5 transition-all duration-200 cursor-pointer"
                       >
                         {sub.label}
-                      </a>
+                      </button>
                     ))}
                   </motion.div>
                 )}
@@ -139,14 +142,13 @@ const Navbar = () => {
                     className="overflow-hidden"
                   >
                     {simSubLinks.map((sub) => (
-                      <a
+                      <button
                         key={sub.label}
-                        href={sub.href}
-                        onClick={() => { setIsOpen(false); setSimMobileOpen(false); }}
-                        className="block pl-8 pr-4 py-3 text-sm font-medium text-zinc-400 hover:text-cyan-300 transition-colors"
+                        onClick={() => { setIsOpen(false); setSimMobileOpen(false); onOpenSimulador(sub.mode); }}
+                        className="block w-full text-left pl-8 pr-4 py-3 text-sm font-medium text-zinc-400 hover:text-cyan-300 transition-colors cursor-pointer"
                       >
                         {sub.label}
-                      </a>
+                      </button>
                     ))}
                   </motion.div>
                 )}

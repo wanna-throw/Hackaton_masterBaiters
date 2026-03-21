@@ -25,6 +25,7 @@ interface DisplayMessage {
 }
 
 interface SimuladorProps {
+  initialMode?: SimMode;
   onBack: () => void;
 }
 
@@ -32,8 +33,8 @@ const HABISIM_SYSTEM = `Actúa como "HabiSim", un simulador de impacto legislati
 
 const HIPOTSIM_SYSTEM = `Actúa como "HipotSim", un simulador de hipotecas por chat. El usuario te hará preguntas sobre hipotecas y tú debes guiarlo paso a paso para simular su hipoteca ideal. Pregúntale datos como: precio de la vivienda, ahorros, ingresos mensuales, tipo de interés preferido (fijo/variable/mixto), plazo deseado, etc. Con esa información, calcula la cuota mensual estimada, el total de intereses, y da recomendaciones. Usa la fórmula francesa de amortización. Tono: cercano, profesional y útil. Español de España.`;
 
-const Simulador: React.FC<SimuladorProps> = ({ onBack }) => {
-  const [mode, setMode] = useState<SimMode>('habisim');
+const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack }) => {
+  const [mode, setMode] = useState<SimMode>(initialMode);
   const [prompt, setPrompt] = useState('');
   const [showParams, setShowParams] = useState(false);
   const [rentaMedia, setRentaMedia] = useState('');
@@ -45,6 +46,11 @@ const Simulador: React.FC<SimuladorProps> = ({ onBack }) => {
   const [error, setError] = useState('');
   const chatHistoryRef = useRef<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Sync mode if initialMode changes while mounted
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode]);
 
   // Scroll to bottom
   useEffect(() => {
@@ -248,6 +254,46 @@ const Simulador: React.FC<SimuladorProps> = ({ onBack }) => {
         {/* Chat area */}
         <div className="flex-1 overflow-y-auto" ref={scrollRef}>
           <div className="max-w-3xl mx-auto px-6 lg:px-8 py-10 space-y-6">
+            {/* HabiSim banner image */}
+            {mode === 'habisim' && messages.length === 0 && !isLoading && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                className="relative w-full h-48 rounded-2xl overflow-hidden border border-white/8"
+              >
+                <img
+                  src="/img/diputados.png"
+                  alt="Congreso de los Diputados"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute bottom-4 left-5">
+                  <p className="text-xs text-zinc-400 uppercase tracking-wider">Simulador legislativo</p>
+                  <p className="text-lg font-bold text-white">HabiSim</p>
+                </div>
+              </motion.div>
+            )}
+            {/* HipotSim banner image */}
+            {mode === 'hipotsim' && messages.length === 0 && !isLoading && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+                className="relative w-full h-48 rounded-2xl overflow-hidden border border-white/8"
+              >
+                <img
+                  src="/img/hipoteca.png"
+                  alt="Simulador de hipotecas"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute bottom-4 left-5">
+                  <p className="text-xs text-zinc-400 uppercase tracking-wider">Simulador de hipotecas</p>
+                  <p className="text-lg font-bold text-white">HipotSim</p>
+                </div>
+              </motion.div>
+            )}
             {/* Welcome message */}
             {messages.length === 0 && !isLoading && (
               <motion.div

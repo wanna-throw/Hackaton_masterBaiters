@@ -8,13 +8,13 @@ const steps = [
   },
   {
     number: '02',
-    title: 'Procesamos los datos',
-    text: 'Analizamos miles de páginas de legislación vigente, datos de mercado de fuentes oficiales y estadísticas actualizadas en tiempo real para construir una respuesta precisa.',
+    title: 'Usa los simuladores',
+    text: 'Simula las leyes que implementarías con nuestro modelo avanzado de IA y observa las estadísticas y sus consecuencias. También puedes simular y comparar si te conviene más un alquiler o que opciones tienes para hipotecarte según tu situación actual.',
   },
   {
     number: '03',
-    title: 'Recibe tu respuesta',
-    text: 'Obtienes una respuesta clara, personalizada y fundamentada en datos reales. Además, puedes utilizar nuestros simuladores para explorar diferentes escenarios.',
+    title: 'Comprueba datos históricos reales',
+    text: 'Consulta de forma gráfica los datos reales de los útimos años y comparalos con otras legislaciones.',
   },
 ];
 

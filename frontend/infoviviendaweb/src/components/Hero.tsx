@@ -4,13 +4,16 @@ import { motion, AnimatePresence } from 'motion/react';
 import Respuesta from './Respuesta';
 import Simulador from './Simulador';
 
-const Hero = () => {
+interface HeroProps {
+  onOpenSimulador: (mode: 'habisim' | 'hipotsim') => void;
+}
+
+const Hero: React.FC<HeroProps> = ({ onOpenSimulador }) => {
   const [query, setQuery] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
   const [showRespuesta, setShowRespuesta] = useState(false);
   const [hasHistory, setHasHistory] = useState(false);
   const [resumeHistory, setResumeHistory] = useState(false);
-  const [showSimulador, setShowSimulador] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,15 +76,13 @@ const Hero = () => {
           className="flex flex-col sm:flex-row gap-5"
         >
           {[
-            { label: 'Simulador de Leyes', img: '/img/simulador_leyes.png', action: 'simulador' },
-            { label: 'Dashboard Estadístico', img: '/img/dashboard_estadistico.png', action: 'dashboard' },
+            { label: 'Simulador de Leyes', img: '/img/simulador_leyes.png', mode: 'habisim' as const },
+            { label: 'Dashboard Estadístico', img: '/img/dashboard_estadistico.png', mode: 'hipotsim' as const },
           ].map((mode) => (
             <button
               key={mode.label}
               type="button"
-              onClick={() => {
-                if (mode.action === 'simulador') setShowSimulador(true);
-              }}
+              onClick={() => onOpenSimulador(mode.mode)}
               className="group relative w-64 rounded-2xl overflow-hidden border border-white/8 hover:border-cyan-500/40 transition-all duration-500 cursor-pointer"
             >
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10" />
@@ -185,13 +186,6 @@ const Hero = () => {
             resumeHistory={resumeHistory}
             onBack={() => setShowRespuesta(false)}
           />
-        )}
-      </AnimatePresence>
-
-      {/* Full-screen Simulador panel */}
-      <AnimatePresence>
-        {showSimulador && (
-          <Simulador onBack={() => setShowSimulador(false)} />
         )}
       </AnimatePresence>
     </section>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const tools = [
@@ -6,21 +6,25 @@ const tools = [
     label: 'Simulador de Leyes',
     img: '/img/sim_leyes_card.png',
     desc: 'Propon tus leyes y ve como afectan a la gente y al país.',
+    mode: 'habisim' as const,
   },
   {
     label: 'Sim. Hipoteca/Alquiler',
     img: '/img/sim_hipoteca_card.png',
     desc: 'Calcula cuotas, gastos e impuestos para tomar la mejor decisión financiera en tu próxima vivienda.',
+    mode: 'hipotsim' as const,
   },
   {
     label: 'Estadísticas Históricas',
     img: '/img/estadisticas_card.png',
     desc: 'Visualiza la evolución de precios y tendencias del mercado inmobiliario en España.',
+    mode: 'habisim' as const, // Placeholder
   },
   {
     label: 'Comparador',
     img: '/img/comparador_card.png',
     desc: 'Compara diferentes legislaciones aplicadas en otros países y comparalo con tu país.',
+    mode: 'habisim' as const, // Placeholder
   },
 ];
 
@@ -31,7 +35,11 @@ const BlueTick = () => (
   </svg>
 );
 
-const Modes = () => {
+interface ModesProps {
+  onOpenSimulador: (mode: 'habisim' | 'hipotsim') => void;
+}
+
+const Modes: React.FC<ModesProps> = ({ onOpenSimulador }) => {
   const [hovered, setHovered] = useState<number | null>(null);
 
   return (
@@ -67,6 +75,7 @@ const Modes = () => {
             >
               <motion.button
                 type="button"
+                onClick={() => onOpenSimulador(tool.mode)}
                 whileHover={{ y: -6, scale: 1.03 }}
                 className="group relative aspect-square w-full overflow-hidden hover:brightness-110 transition-all duration-500 cursor-pointer"
               >
