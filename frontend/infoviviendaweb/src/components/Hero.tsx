@@ -1,18 +1,24 @@
 import React, { useState } from 'react';
-import { Search, ArrowRight } from 'lucide-react';
+import { Search, ArrowRight, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Respuesta from './Respuesta';
+import Simulador from './Simulador';
 
 const Hero = () => {
   const [query, setQuery] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
   const [showRespuesta, setShowRespuesta] = useState(false);
+  const [hasHistory, setHasHistory] = useState(false);
+  const [resumeHistory, setResumeHistory] = useState(false);
+  const [showSimulador, setShowSimulador] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
     setSubmittedQuery(query);
+    setResumeHistory(false);
     setShowRespuesta(true);
+    setHasHistory(true);
   };
 
   return (
@@ -67,12 +73,15 @@ const Hero = () => {
           className="flex flex-col sm:flex-row gap-5"
         >
           {[
-            { label: 'Simulador de Leyes', img: '/img/simulador_leyes.png' },
-            { label: 'Dashboard Estadístico', img: '/img/dashboard_estadistico.png' },
+            { label: 'Simulador de Leyes', img: '/img/simulador_leyes.png', action: 'simulador' },
+            { label: 'Dashboard Estadístico', img: '/img/dashboard_estadistico.png', action: 'dashboard' },
           ].map((mode) => (
             <button
               key={mode.label}
               type="button"
+              onClick={() => {
+                if (mode.action === 'simulador') setShowSimulador(true);
+              }}
               className="group relative w-64 rounded-2xl overflow-hidden border border-white/8 hover:border-cyan-500/40 transition-all duration-500 cursor-pointer"
             >
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10" />
@@ -145,13 +154,44 @@ const Hero = () => {
         </motion.div>
       </div>
 
+      {/* Floating history button */}
+      <AnimatePresence>
+        {hasHistory && !showRespuesta && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            onClick={() => {
+              setResumeHistory(true);
+              setShowRespuesta(true);
+            }}
+            className="fixed bottom-8 right-8 z-40 group flex items-center gap-2.5 bg-zinc-900/90 border border-cyan-500/30 hover:border-cyan-400/60 rounded-full pl-5 pr-6 py-3 backdrop-blur-xl shadow-lg shadow-cyan-500/10 hover:shadow-cyan-500/20 transition-all duration-300 cursor-pointer"
+          >
+            <MessageSquare size={18} className="text-cyan-400 group-hover:scale-110 transition-transform duration-300" />
+            <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors duration-300">
+              Ver historial
+            </span>
+            <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
       {/* Full-screen AI response panel */}
       <AnimatePresence>
         {showRespuesta && (
           <Respuesta
             query={submittedQuery}
+            resumeHistory={resumeHistory}
             onBack={() => setShowRespuesta(false)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Full-screen Simulador panel */}
+      <AnimatePresence>
+        {showSimulador && (
+          <Simulador onBack={() => setShowSimulador(false)} />
         )}
       </AnimatePresence>
     </section>
