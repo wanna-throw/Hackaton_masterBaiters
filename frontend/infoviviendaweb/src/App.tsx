@@ -6,9 +6,11 @@ import Modes from './components/Modes';
 import ComoFunciona from './components/ComoFunciona';
 import Footer from './components/Footer';
 import Simulador from './components/Simulador';
+import Dashboard from './components/Dashboard';
 
 export default function App() {
   const [showSimulador, setShowSimulador] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
   const [simMode, setSimMode] = useState<'habisim' | 'hipotsim'>('habisim');
 
   const openSimulador = (mode: 'habisim' | 'hipotsim' = 'habisim') => {
@@ -16,12 +18,22 @@ export default function App() {
     setShowSimulador(true);
   };
 
+  const openDashboard = () => {
+    setShowDashboard(true);
+  };
+
   return (
     <div className="min-h-screen bg-black font-sans text-white selection:bg-cyan-500/20 selection:text-white">
-      <Navbar onOpenSimulador={openSimulador} />
+      <Navbar onOpenSimulador={openSimulador} onOpenDashboard={openDashboard} />
       <main>
-        <Hero onOpenSimulador={openSimulador} />
-        <Modes onOpenSimulador={openSimulador} />
+        <Hero 
+          onOpenSimulador={openSimulador} 
+          onOpenDashboard={openDashboard}
+        />
+        <Modes 
+          onOpenSimulador={openSimulador} 
+          onOpenDashboard={openDashboard}
+        />
         <ComoFunciona />
       </main>
       <Footer />
@@ -32,6 +44,15 @@ export default function App() {
           <Simulador
             initialMode={simMode}
             onBack={() => setShowSimulador(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Global Dashboard overlay */}
+      <AnimatePresence>
+        {showDashboard && (
+          <Dashboard
+            onBack={() => setShowDashboard(false)}
           />
         )}
       </AnimatePresence>

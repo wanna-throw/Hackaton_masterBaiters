@@ -6,9 +6,10 @@ import Simulador from './Simulador';
 
 interface HeroProps {
   onOpenSimulador: (mode: 'habisim' | 'hipotsim') => void;
+  onOpenDashboard: () => void;
 }
 
-const Hero: React.FC<HeroProps> = ({ onOpenSimulador }) => {
+const Hero: React.FC<HeroProps> = ({ onOpenSimulador, onOpenDashboard }) => {
   const [query, setQuery] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
   const [showRespuesta, setShowRespuesta] = useState(false);
@@ -76,13 +77,16 @@ const Hero: React.FC<HeroProps> = ({ onOpenSimulador }) => {
           className="flex flex-col sm:flex-row gap-5"
         >
           {[
-            { label: 'Simulador de Leyes', img: '/img/simulador_leyes.png', mode: 'habisim' as const },
-            { label: 'Dashboard Estadístico', img: '/img/dashboard_estadistico.png', mode: 'hipotsim' as const },
+            { label: 'Simulador de Leyes', img: '/img/simulador_leyes.png', type: 'simulador', mode: 'habisim' as const },
+            { label: 'Dashboard Estadístico', img: '/img/dashboard_estadistico.png', type: 'dashboard' },
           ].map((mode) => (
             <button
               key={mode.label}
               type="button"
-              onClick={() => onOpenSimulador(mode.mode)}
+              onClick={() => {
+                if (mode.type === 'simulador') onOpenSimulador(mode.mode!);
+                else onOpenDashboard();
+              }}
               className="group relative w-64 rounded-2xl overflow-hidden border border-white/8 hover:border-cyan-500/40 transition-all duration-500 cursor-pointer"
             >
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10" />

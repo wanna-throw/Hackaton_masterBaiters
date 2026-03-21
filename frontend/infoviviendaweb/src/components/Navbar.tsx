@@ -8,16 +8,17 @@ const simSubLinks = [
 ];
 
 const navLinks = [
-  { label: 'Estadísticas', href: '#modes' },
+  { label: 'Estadísticas', mode: 'dashboard' as const, href: '#modes' }, // Mode for stats
   { label: 'Comparador', href: '#modes' },
   { label: '¿Cómo funciona?', href: '#como-funciona' },
 ];
 
 interface NavbarProps {
   onOpenSimulador: (mode: 'habisim' | 'hipotsim') => void;
+  onOpenDashboard: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onOpenSimulador }) => {
+const Navbar: React.FC<NavbarProps> = ({ onOpenSimulador, onOpenDashboard }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [simOpen, setSimOpen] = useState(false);
   const [simMobileOpen, setSimMobileOpen] = useState(false);
@@ -89,13 +90,13 @@ const Navbar: React.FC<NavbarProps> = ({ onOpenSimulador }) => {
 
             {/* Other links */}
             {navLinks.map((link) => (
-              <a
+              <button
                 key={link.label}
-                href={link.href}
-                className="text-zinc-400 hover:text-white text-sm font-medium transition-colors duration-300 nav-link"
+                onClick={link.label === 'Estadísticas' ? onOpenDashboard : undefined}
+                className="text-zinc-400 hover:text-white text-sm font-medium transition-colors duration-300 nav-link cursor-pointer"
               >
                 {link.label}
-              </a>
+              </button>
             ))}
           </div>
 
@@ -156,14 +157,16 @@ const Navbar: React.FC<NavbarProps> = ({ onOpenSimulador }) => {
 
               {/* Other links */}
               {navLinks.map((link) => (
-                <a
+                <button
                   key={link.label}
-                  href={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className="block px-4 py-4 text-base font-medium text-zinc-300 hover:text-white transition-colors"
+                  onClick={() => {
+                    setIsOpen(false);
+                    if (link.label === 'Estadísticas') onOpenDashboard();
+                  }}
+                  className="block w-full text-left px-4 py-4 text-sm font-medium text-zinc-300 hover:text-white transition-colors cursor-pointer"
                 >
                   {link.label}
-                </a>
+                </button>
               ))}
             </div>
           </motion.div>

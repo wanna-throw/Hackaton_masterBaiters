@@ -18,7 +18,7 @@ const tools = [
     label: 'Estadísticas Históricas',
     img: '/img/estadisticas_card.png',
     desc: 'Visualiza la evolución de precios y tendencias del mercado inmobiliario en España.',
-    mode: 'habisim' as const, // Placeholder
+    type: 'dashboard',
   },
   {
     label: 'Comparador',
@@ -37,9 +37,10 @@ const BlueTick = () => (
 
 interface ModesProps {
   onOpenSimulador: (mode: 'habisim' | 'hipotsim') => void;
+  onOpenDashboard: () => void;
 }
 
-const Modes: React.FC<ModesProps> = ({ onOpenSimulador }) => {
+const Modes: React.FC<ModesProps> = ({ onOpenSimulador, onOpenDashboard }) => {
   const [hovered, setHovered] = useState<number | null>(null);
 
   return (
@@ -75,7 +76,10 @@ const Modes: React.FC<ModesProps> = ({ onOpenSimulador }) => {
             >
               <motion.button
                 type="button"
-                onClick={() => onOpenSimulador(tool.mode)}
+                onClick={() => {
+                   if (tool.type === 'dashboard') onOpenDashboard();
+                   else onOpenSimulador(tool.mode as any);
+                }}
                 whileHover={{ y: -6, scale: 1.03 }}
                 className="group relative aspect-square w-full overflow-hidden hover:brightness-110 transition-all duration-500 cursor-pointer"
               >
