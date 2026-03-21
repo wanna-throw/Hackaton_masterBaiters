@@ -198,8 +198,8 @@ Se crea la categoría de "vivienda asequible incentivada" con beneficios fiscale
               transition={{ delay: 0.6, duration: 0.5 }}
             >
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-400 flex items-center justify-center">
-                  <img src="./logoinfoviviendasintexto.png" alt="Logo" className="w-6 h-6" />
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-black to-black flex items-center justify-center">
+                  <img src="img/logoinfoviviendasintexto.png" alt="Logo" className="w-6 h-6" />
                 </div>
                 <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
                   InfoVivienda IA
