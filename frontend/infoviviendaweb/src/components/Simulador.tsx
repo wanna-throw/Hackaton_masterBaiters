@@ -138,6 +138,7 @@ const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack, 
         body: JSON.stringify({
           prompt: fullPrompt,
           history: chatHistoryRef.current,
+          mode: mode, // Pass mode to distinguish hipotsim vs regular chat
         }),
       });
 

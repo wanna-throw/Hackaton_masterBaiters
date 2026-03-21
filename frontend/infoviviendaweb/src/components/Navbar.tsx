@@ -16,9 +16,10 @@ const navLinks = [
 interface NavbarProps {
   onOpenSimulador: (mode: 'habisim' | 'hipotsim') => void;
   onOpenDashboard: () => void;
+  onOpenComparador: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onOpenSimulador, onOpenDashboard }) => {
+const Navbar: React.FC<NavbarProps> = ({ onOpenSimulador, onOpenDashboard, onOpenComparador }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [simOpen, setSimOpen] = useState(false);
   const [simMobileOpen, setSimMobileOpen] = useState(false);
@@ -34,6 +35,12 @@ const Navbar: React.FC<NavbarProps> = ({ onOpenSimulador, onOpenDashboard }) => 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleLinkClick = (label: string) => {
+    setIsOpen(false);
+    if (label === 'Estadísticas') onOpenDashboard();
+    if (label === 'Comparador') onOpenComparador();
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5">
@@ -92,7 +99,7 @@ const Navbar: React.FC<NavbarProps> = ({ onOpenSimulador, onOpenDashboard }) => 
             {navLinks.map((link) => (
               <button
                 key={link.label}
-                onClick={link.label === 'Estadísticas' ? onOpenDashboard : undefined}
+                onClick={() => handleLinkClick(link.label)}
                 className="text-zinc-400 hover:text-white text-sm font-medium transition-colors duration-300 nav-link cursor-pointer"
               >
                 {link.label}
@@ -159,10 +166,7 @@ const Navbar: React.FC<NavbarProps> = ({ onOpenSimulador, onOpenDashboard }) => 
               {navLinks.map((link) => (
                 <button
                   key={link.label}
-                  onClick={() => {
-                    setIsOpen(false);
-                    if (link.label === 'Estadísticas') onOpenDashboard();
-                  }}
+                  onClick={() => handleLinkClick(link.label)}
                   className="block w-full text-left px-4 py-4 text-sm font-medium text-zinc-300 hover:text-white transition-colors cursor-pointer"
                 >
                   {link.label}

@@ -23,8 +23,8 @@ const tools = [
   {
     label: 'Comparador',
     img: '/img/comparador_card.png',
-    desc: 'Compara diferentes legislaciones aplicadas en otros países y comparalo con tu país.',
-    mode: 'habisim' as const, // Placeholder
+    desc: 'Compara diferentes legislaciones aplicadas en otros países y contrástalo con tu país.',
+    type: 'comparador',
   },
 ];
 
@@ -38,9 +38,10 @@ const BlueTick = () => (
 interface ModesProps {
   onOpenSimulador: (mode: 'habisim' | 'hipotsim') => void;
   onOpenDashboard: () => void;
+  onOpenComparador: () => void;
 }
 
-const Modes: React.FC<ModesProps> = ({ onOpenSimulador, onOpenDashboard }) => {
+const Modes: React.FC<ModesProps> = ({ onOpenSimulador, onOpenDashboard, onOpenComparador }) => {
   const [hovered, setHovered] = useState<number | null>(null);
 
   return (
@@ -78,6 +79,7 @@ const Modes: React.FC<ModesProps> = ({ onOpenSimulador, onOpenDashboard }) => {
                 type="button"
                 onClick={() => {
                    if (tool.type === 'dashboard') onOpenDashboard();
+                   else if (tool.type === 'comparador') onOpenComparador();
                    else onOpenSimulador(tool.mode as any);
                 }}
                 whileHover={{ y: -6, scale: 1.03 }}

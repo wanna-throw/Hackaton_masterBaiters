@@ -10,38 +10,48 @@ app.use(express.json());
 // Configura Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// ── Instrucción InfoBot (Asistente General) ───────────────────────────
+// ── Instrucción InfoBot (Asistente General / Soporte) ───────────────────────────
 const INFOBOT_INSTRUCTION = `Eres "InfoBot", el asistente virtual de InfoVivienda.
-ALCANCE: Legislación Española, Hipotecas y funcionamiento de la web.
-TONO: Profesional y conciso.
-AVISO LEGAL: Indica siempre que la info es orientativa y recomienda profesionales.
+ALCANCE: Guía de uso de la aplicación, dudas generales sobre vivienda en España.
 Tambien tienes que guiar al usuario si lo pide por las diferentes secciones de la web y sus funciones.
 Si el usuario quiere ver datos reales de españa, redirigelo a la seción de Estadísticas o Dashboard de Estadísticas.
 Si quiere simular una ley que vaya al apartado de simulador de leyes.
 Si quiere simular una hipoteca que vaya al apartado de simulador de hipotecas.
-Si quiere comparar datos legislativos de diferentes paises que vaya al comparador`;
+Si quiere comparar datos legislativos de diferentes paises que vaya al comparador.
+Tono: Profesional y amable. Indica que eres una IA.`;
 
-// ── Instrucción HabiSim (Simulador Predictivo) ────────────────────────
+// ── Instrucción HipotSim (Asesor Financiero y de Vivienda) ────────────────────────
+const HIPOTSIM_INSTRUCTION = `Eres "HipotSim", el asesor financiero experto de InfoVivienda.
+TU MISIÓN: Ayudar a los usuarios a decidir si les conviene hipotecarse o alquilar un piso basándose en su situación económica.
+REGLAS ESTRICTAS:
+1. Solo puedes responder consultas sobre hipotecas, alquileres, cálculos de rentabilidad y comparativas financieras de vivienda.
+2. Debes pedir datos si faltan (sueldo, ahorros, zona, precio vivienda) para dar un consejo preciso.
+3. El tono debe ser de asesor experto, realista y cauteloso con el endeudamiento.
+4. Si preguntan por legislación general o comparativa de países, redirígeles a las otras secciones de la web.
+5. Ciñete EXCLUSIVAMENTE a la asesoría financiera y de vivienda respecto a hipotecarse o alquilar un piso.`;
+
+// ── Instrucción HabiSim (Simulador Predictivo de Leyes) ────────────────────────
 const HABISIM_INSTRUCTION = `Eres "HabiSim", el motor analítico de InfoVivienda.
-TU MISIÓN: Simular el impacto de leyes de vivienda sobre indicadores económicos.
-ENTRADA: Un set de leyes y parámetros (inflación, interés, etc.).
+TU MISIÓN: Simular el impacto de leyes de vivienda sobre indicadores económicos para proyectar el €/m2.
 SALIDA: Debes responder EXCLUSIVAMENTE en formato JSON con la siguiente estructura:
 {
-  "analysis": "Un resumen ejecutivo del impacto (máx 300 palabras).",
-  "risks": ["Riesgo 1", "Riesgo 2"],
-  "predictions": [[mes1_data], [mes2_data], ...]
+  "analysis": "Análisis del impacto.",
+  "risks": ["Riesgo 1"],
+  "predictions": [[mes1_data], ...]
 }
-Cada sub-array de predictions representa un mes (longitud definida por el usuario) y contiene los 14 indicadores del CSV:
-[min_renta_hipoteca, interes, alquiler_medio, inflacion, cambio_poblacional, sueldo_medio, pib_per_capita, viviendas_venta, pct_alquiler, viviendas_vacias, nuevas_construcciones, precio_medio_vivienda, indice_catastrofes, ratio_comprador_vivienda]
-IMPORTANTE: Sé realista basándote en la teoría económica (ej: si sube la inflación drásticamente, el precio de la vivienda suele subir pero el interés también).`;
+Cada sub-array tiene 14 indicadores. Sé realista basándote en teoría económica.`;
 
-// Endpoint Chat General (InfoBot / HipotSim)
+// ── Instrucción Comparador (Política Exterior) ────────────────────────
+const COMPARADOR_INSTRUCTION = `Eres un comparador de situaciones económicas entre únicamente los países que se pasan en el prompt. 
+REGLAS: Vivienda y economía únicamente. Efectos sobre vivienda.`;
+
+// Endpoint Chat (Diferencia si es para Asesoría Financiera o Soporte General)
 app.post('/api/chat', async (req, res) => {
-    const { prompt, history } = req.body;
+    const { prompt, history, mode } = req.body;
     try {
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash",
-            systemInstruction: INFOBOT_INSTRUCTION
+            model: "gemini-2.5-flash", // Using a stable version, update as needed
+            systemInstruction: mode === 'hipotsim' ? HIPOTSIM_INSTRUCTION : INFOBOT_INSTRUCTION
         });
         const chat = model.startChat({ history: history || [] });
         const result = await chat.sendMessage(prompt);
@@ -49,11 +59,11 @@ app.post('/api/chat', async (req, res) => {
         res.json({ text: response.text() });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Error en InfoBot" });
+        res.status(500).json({ error: "Error en el chat" });
     }
 });
 
-// Endpoint HabiSim (Simulación Predictiva)
+// Endpoint HabiSim (Redirecciona a resultados con datos JSON)
 app.post('/api/habisim', async (req, res) => {
     const { prompt, params } = req.body;
     try {
@@ -62,15 +72,30 @@ app.post('/api/habisim', async (req, res) => {
             systemInstruction: HABISIM_INSTRUCTION,
             generationConfig: { responseMimeType: "application/json" }
         });
-
-        const fullPrompt = `Leyes a simular: ${prompt}\n\nParámetros iniciales:\n${JSON.stringify(params)}`;
+        const fullPrompt = `Leyes: ${prompt}\n\nParams: ${JSON.stringify(params)}`;
         const result = await model.generateContent(fullPrompt);
         const response = await result.response;
         res.json(JSON.parse(response.text()));
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Error en la simulación HabiSim" });
+        res.status(500).json({ error: "Error en HabiSim" });
     }
 });
 
-app.listen(5000, () => console.log('Backend de InfoVivienda corriendo en puerto 5000'));
+app.post('/api/compare', async (req, res) => {
+    const { prompt } = req.body;
+    try {
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.5-flash",
+            systemInstruction: COMPARADOR_INSTRUCTION
+        });
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        res.json({ text: response.text() });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error en Comparador" });
+    }
+});
+
+app.listen(5000, () => console.log('Backend de InfoVivienda activo en puerto 5000'));
