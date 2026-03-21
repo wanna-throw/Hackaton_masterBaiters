@@ -5,7 +5,7 @@ const tools = [
   {
     label: 'Simulador de Leyes',
     img: '/img/sim_leyes_card.png',
-    desc: 'Analiza cómo te afectan las nuevas normativas de vivienda y alquiler de forma personalizada.',
+    desc: 'Propon tus leyes y ve como afectan a la gente y al país.',
   },
   {
     label: 'Sim. Hipoteca/Alquiler',
@@ -15,12 +15,12 @@ const tools = [
   {
     label: 'Estadísticas Históricas',
     img: '/img/estadisticas_card.png',
-    desc: 'Visualiza la evolución de precios y tendencias del mercado inmobiliario en tu zona.',
+    desc: 'Visualiza la evolución de precios y tendencias del mercado inmobiliario en España.',
   },
   {
     label: 'Comparador',
     img: '/img/comparador_card.png',
-    desc: 'Compara diferentes escenarios legislativos y datos de mercado para entender el impacto real.',
+    desc: 'Compara diferentes legislaciones aplicadas en otros países y comparalo con tu país.',
   },
 ];
 
@@ -35,7 +35,7 @@ const Modes = () => {
   const [hovered, setHovered] = useState<number | null>(null);
 
   return (
-    <section id="modes" className="relative py-28 lg:py-36 bg-black overflow-hidden">
+    <section id="modes" className="relative pt-12 lg:pt-16 pb-28 lg:pb-36 bg-black overflow-hidden">
       <div className="modes-grid" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
@@ -44,15 +44,16 @@ const Modes = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight mb-16"
+          className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight mb-16 text-center"
         >
-          <span className="underline decoration-cyan-500 decoration-2 underline-offset-8">
+          <span className="underline decoration-cyan-500 decoration-2 underline-offset-10">
             Nuestras Herramientas:
           </span>
         </motion.h2>
+      </div>
 
-        {/* 1×4 image button grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+      {/* 1×4 image button grid — full width */}
+      <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-0">
           {tools.map((tool, i) => (
             <motion.div
               key={tool.label}
@@ -67,7 +68,7 @@ const Modes = () => {
               <motion.button
                 type="button"
                 whileHover={{ y: -6, scale: 1.03 }}
-                className="group relative aspect-square w-full rounded-2xl overflow-hidden border border-white/8 hover:border-cyan-500/40 transition-all duration-500 cursor-pointer"
+                className="group relative aspect-square w-full overflow-hidden hover:brightness-110 transition-all duration-500 cursor-pointer"
               >
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent z-10" />
                 <img
@@ -109,7 +110,6 @@ const Modes = () => {
             </motion.div>
           ))}
         </div>
-      </div>
     </section>
   );
 };

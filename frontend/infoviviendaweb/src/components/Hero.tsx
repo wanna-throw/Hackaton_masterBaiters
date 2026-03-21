@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
 import { Search, ArrowRight } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
+import Respuesta from './Respuesta';
 
 const Hero = () => {
   const [query, setQuery] = useState('');
+  const [submittedQuery, setSubmittedQuery] = useState('');
+  const [showRespuesta, setShowRespuesta] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
-    console.log('Searching for:', query);
+    setSubmittedQuery(query);
+    setShowRespuesta(true);
   };
 
   return (
-    <section className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-black">
+    <section className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-black">
       {/* Background effects */}
       <div className="hero-grid" />
       <div className="hero-glow top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 animate-pulse-line" />
@@ -140,6 +144,16 @@ const Hero = () => {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Full-screen AI response panel */}
+      <AnimatePresence>
+        {showRespuesta && (
+          <Respuesta
+            query={submittedQuery}
+            onBack={() => setShowRespuesta(false)}
+          />
+        )}
+      </AnimatePresence>
     </section>
   );
 };
