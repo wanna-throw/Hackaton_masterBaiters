@@ -5,9 +5,10 @@ import {
   Send,
   ChevronDown,
   Sparkles,
-  Building2,
-  Landmark,
   ArrowLeftRight,
+  Settings,
+  Users,
+  Play,
 } from 'lucide-react';
 
 const API_URL = 'http://localhost:5000/api/chat';
@@ -27,18 +28,36 @@ interface DisplayMessage {
 interface SimuladorProps {
   initialMode?: SimMode;
   onBack: () => void;
+  onSimulate?: (laws: string, params: any) => void;
 }
 
-const HABISIM_SYSTEM = `Actúa como "HabiSim", un simulador de impacto legislativo de vivienda. El usuario te proporcionará leyes (reales o ficticias) que quiere simular. Junto con los parámetros que te dé (renta media anual, precio medio anual, etc.), debes analizar cómo esas leyes afectarían al mercado de vivienda español. Responde con un análisis estructurado: impacto en alquileres, impacto en compraventa, efectos en propietarios, efectos en inquilinos, y una conclusión general. Usa datos realistas como referencia. Tono: profesional y analítico. Español de España.`;
+const HABISIM_SYSTEM = `Actúa como "HabiSim", un simulador de impacto legislativo de vivienda. El usuario te proporcionará leyes (reales o ficticias) que quiere simular. Junto con los parámetros estadísticos que te dé, debes analizar cómo esas leyes afectarían al mercado de vivienda español. Responde con un análisis estructurado: impacto en alquileres, impacto en compraventa, efectos en propietarios, efectos en inquilinos, y una conclusión general. Usa datos realistas como referencia. Tono: profesional y analítico. Español de España.`;
 
 const HIPOTSIM_SYSTEM = `Actúa como "HipotSim", un simulador de hipotecas por chat. El usuario te hará preguntas sobre hipotecas y tú debes guiarlo paso a paso para simular su hipoteca ideal. Pregúntale datos como: precio de la vivienda, ahorros, ingresos mensuales, tipo de interés preferido (fijo/variable/mixto), plazo deseado, etc. Con esa información, calcula la cuota mensual estimada, el total de intereses, y da recomendaciones. Usa la fórmula francesa de amortización. Tono: cercano, profesional y útil. Español de España.`;
 
-const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack }) => {
+const HABISIM_PARAMS_CONFIG = [
+  { id: 'min_renta_hipoteca', label: 'Min. Renta Hipoteca (€)', placeholder: '1200', max: 4000 },
+  { id: 'interes', label: 'Interés (%)', placeholder: '3.5', max: 50 },
+  { id: 'alquiler_medio', label: 'Alquiler Medio (€)', placeholder: '800', max: 20000 },
+  { id: 'inflacion', label: 'Inflación (%)', placeholder: '2.8', max: 1000 },
+  { id: 'cambio_poblacional', label: 'Cambio Poblacional (%)', placeholder: '0.5', max: 50 },
+  { id: 'sueldo_medio', label: 'Sueldo Medio (€)', placeholder: '2100', max: 20000 },
+  { id: 'pib_per_capita', label: 'PIB per Cápita (€)', placeholder: '28000', max: 200000 },
+  { id: 'viviendas_venta', label: 'Viviendas en Venta', placeholder: '450000', max: 50000000 },
+  { id: 'pct_alquiler', label: 'Porcentaje Alquiler (%)', placeholder: '24.2', max: 80 },
+  { id: 'viviendas_vacias', label: 'Viviendas Vacías', placeholder: '3400000', max: 50000000 },
+  { id: 'nuevas_construcciones', label: 'Nuevas Construcciones', placeholder: '85000', max: 10000000 },
+  { id: 'precio_medio_vivienda', label: 'Precio Medio Vivienda (€/m2)', placeholder: '2100', max: 100000 },
+  { id: 'indice_catastrofes', label: 'Índice Catástrofes (1-10)', placeholder: '2', max: 10 },
+  { id: 'ratio_comprador_vivienda', label: 'Ratio Comprador/Vivienda', placeholder: '3.1', max: 10000 },
+  { id: 'meses', label: 'Duración (Meses)', placeholder: '24', max: 24 },
+];
+
+const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack, onSimulate }) => {
   const [mode, setMode] = useState<SimMode>(initialMode);
   const [prompt, setPrompt] = useState('');
   const [showParams, setShowParams] = useState(false);
-  const [rentaMedia, setRentaMedia] = useState('');
-  const [precioMedio, setPrecioMedio] = useState('');
+  const [hParams, setHParams] = useState<Record<string, string>>({});
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [displayedText, setDisplayedText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -47,19 +66,16 @@ const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack }
   const chatHistoryRef = useRef<ChatMessage[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Sync mode if initialMode changes while mounted
   useEffect(() => {
     setMode(initialMode);
   }, [initialMode]);
 
-  // Scroll to bottom
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [displayedText, messages]);
 
-  // Reset chat when switching modes
   const switchMode = (newMode: SimMode) => {
     if (newMode === mode) return;
     setMode(newMode);
@@ -70,12 +86,17 @@ const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack }
     setError('');
     setPrompt('');
     setShowParams(false);
-    setRentaMedia('');
-    setPrecioMedio('');
+    setHParams({});
     chatHistoryRef.current = [];
   };
 
   const sendMessage = async (userPrompt: string) => {
+    // If HabiSim, trigger simulation instead of chat
+    if (mode === 'habisim' && onSimulate) {
+      onSimulate(userPrompt, hParams);
+      return;
+    }
+
     setError('');
     setIsLoading(true);
     setIsTyping(false);
@@ -83,11 +104,22 @@ const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack }
 
     setMessages((prev) => [...prev, { role: 'user', text: userPrompt }]);
 
-    // Build the full prompt with system context for first message
     let fullPrompt = userPrompt;
     if (chatHistoryRef.current.length === 0) {
       const systemCtx = mode === 'habisim' ? HABISIM_SYSTEM : HIPOTSIM_SYSTEM;
-      fullPrompt = `${systemCtx}\n\n---\nConsulta del usuario:\n${userPrompt}`;
+      
+      let paramsText = '';
+      if (mode === 'habisim' && Object.keys(hParams).length > 0) {
+        paramsText = '\n\nParámetros estadísticos proporcionados para esta simulación:\n' + 
+          Object.entries(hParams)
+            .filter(([_, val]) => (val as string).trim() !== '')
+            .map(([id, val]) => {
+              const label = HABISIM_PARAMS_CONFIG.find(c => c.id === id)?.label;
+              return `- ${label}: ${val}`;
+            }).join('\n');
+      }
+
+      fullPrompt = `${systemCtx}${paramsText}\n\n---\nConsulta del usuario:\n${userPrompt}`;
     }
 
     try {
@@ -100,283 +132,216 @@ const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack }
         }),
       });
 
-      if (!res.ok) throw new Error(`Error del servidor: ${res.status}`);
+      if (!res.ok) throw new Error('Error en la comunicación con el servidor');
 
       const data = await res.json();
-      const aiText: string = data.text || 'No se recibió respuesta.';
+      const aiResponse = data.text;
 
       chatHistoryRef.current = [
         ...chatHistoryRef.current,
         { role: 'user', parts: [{ text: fullPrompt }] },
-        { role: 'model', parts: [{ text: aiText }] },
+        { role: 'model', parts: [{ text: aiResponse }] },
       ];
 
-      setIsLoading(false);
-      setIsTyping(true);
-
-      let idx = 0;
-      const interval = setInterval(() => {
-        if (idx < aiText.length) {
-          setDisplayedText(aiText.slice(0, idx + 1));
-          idx++;
-        } else {
-          setIsTyping(false);
-          clearInterval(interval);
-          setMessages((prev) => [...prev, { role: 'ai', text: aiText }]);
-          setDisplayedText('');
-        }
-      }, 8);
+      setMessages((prev) => [...prev, { role: 'ai', text: aiResponse }]);
+      startTypingAnimation(aiResponse);
     } catch (err: any) {
+      setError(err.message || 'Error desconocido');
+    } finally {
       setIsLoading(false);
-      setError(err.message || 'Error de conexión.');
+      setPrompt('');
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!prompt.trim() || isLoading || isTyping) return;
-
-    let finalPrompt = prompt;
-
-    // Append manual params for HabiSim if set
-    if (mode === 'habisim' && (rentaMedia || precioMedio)) {
-      const params: string[] = [];
-      if (rentaMedia) params.push(`Renta media anual: ${rentaMedia}€`);
-      if (precioMedio) params.push(`Precio medio anual: ${precioMedio}€`);
-      finalPrompt += `\n\nParámetros manuales:\n${params.join('\n')}`;
-    }
-
-    setPrompt('');
-    sendMessage(finalPrompt);
-  };
-
-  // Simple markdown renderer (reused pattern)
-  const renderText = (text: string) => {
-    const lines = text.split('\n');
-    return lines.map((line, i) => {
-      const boldParts = line.split(/(\*\*.*?\*\*)/g);
-      const rendered = boldParts.map((part, j) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          return (
-            <strong key={j} className="text-cyan-300 font-semibold">
-              {part.slice(2, -2)}
-            </strong>
-          );
-        }
-        return <span key={j}>{part}</span>;
-      });
-
-      if (line.startsWith('> ')) {
-        return (
-          <div
-            key={i}
-            className="border-l-2 border-cyan-500/50 pl-4 py-2 my-2 bg-cyan-500/5 rounded-r-lg"
-          >
-            {rendered}
-          </div>
-        );
+  const startTypingAnimation = (text: string) => {
+    setIsTyping(true);
+    setDisplayedText('');
+    let i = 0;
+    const interval = setInterval(() => {
+      setDisplayedText((prev) => prev + text[i]);
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+        setIsTyping(false);
       }
-      if (line.trim() === '') return <div key={i} className="h-3" />;
-      return (
-        <p key={i} className="leading-relaxed">
-          {rendered}
-        </p>
-      );
-    });
+    }, 10);
   };
 
-  const modeConfig = {
+  const renderText = (text: string) => {
+    return text.split('\n').map((line, i) => (
+      <React.Fragment key={i}>
+        {line}
+        <br />
+      </React.Fragment>
+    ));
+  };
+
+  const modeContent = {
     habisim: {
       name: 'HabiSim',
-      description: 'Simulador de impacto legislativo',
-      icon: <Landmark size={18} />,
-      accent: 'from-cyan-500 to-blue-500',
+      subtitle: 'Simulador Legislativo AI',
+      icon: <img src="/img/diputados.png" alt="HabiSim" className="w-full h-full object-cover rounded-xl" />,
+      accent: 'from-cyan-400 to-blue-500',
+      description: 'Evalúa el impacto de nuevas leyes de vivienda en el mercado real.',
       placeholder: 'Escribe las leyes que querrías implementar en la simulación...',
+      img: '/img/diputados.png'
     },
     hipotsim: {
       name: 'HipotSim',
-      description: 'Simulador de hipotecas por chat',
-      icon: <Building2 size={18} />,
-      accent: 'from-emerald-500 to-cyan-500',
-      placeholder: 'Pregunta sobre tu hipoteca ideal...',
+      subtitle: 'Asesor Hipotecario AI',
+      icon: <img src="/img/hipoteca.png" alt="HipotSim" className="w-full h-full object-cover rounded-xl" />,
+      accent: 'from-emerald-400 to-teal-500',
+      description: 'Simula tu hipoteca ideal y recibe asesoramiento financiero personalizado.',
+      placeholder: 'Describe qué tipo de vivienda quieres comprar y tus ahorros...',
+      img: '/img/hipoteca.png'
     },
   };
 
-  const current = modeConfig[mode];
+  const current = modeContent[mode];
 
   return (
     <motion.div
-      initial={{ x: '100%' }}
-      animate={{ x: 0 }}
-      exit={{ x: '100%' }}
-      transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-      className="fixed inset-0 z-50 bg-black overflow-hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 bg-black flex flex-col font-sans"
     >
-      {/* Background */}
-      <div className="hero-grid" />
-      <div className="hero-glow top-1/4 right-1/4 translate-x-1/2 -translate-y-1/2 animate-pulse-line" />
-      <div
-        className="hero-glow bottom-1/3 left-1/3 -translate-x-1/2 translate-y-1/2 animate-pulse-line"
-        style={{ animationDelay: '1.5s' }}
-      />
-      <div className="absolute top-20 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent animate-pulse-line" />
+      <div className="flex-1 overflow-hidden flex flex-col relative">
+        <div className="hero-grid opacity-10" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/5 blur-[150px] -z-10" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 blur-[150px] -z-10" />
 
-      <div className="relative z-10 h-full flex flex-col">
-        {/* Header */}
-        <motion.header
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="flex items-center justify-between px-6 lg:px-12 py-5 border-b border-white/5 bg-black/60 backdrop-blur-xl"
-        >
-          <button
-            onClick={onBack}
-            className="group flex items-center gap-2 text-zinc-400 hover:text-white transition-colors duration-300 cursor-pointer"
-          >
-            <ArrowLeft
-              size={20}
-              className="group-hover:-translate-x-1 transition-transform duration-300"
-            />
-            <span className="text-sm font-medium">Volver</span>
-          </button>
+        <header className="flex items-center justify-between px-6 lg:px-12 py-6 border-b border-white/5 bg-black/40 backdrop-blur-xl shrink-0">
+          <div className="flex items-center gap-6">
+            <button
+              onClick={onBack}
+              className="group flex items-center gap-2 text-zinc-400 hover:text-white transition-colors duration-300 cursor-pointer"
+            >
+              <ArrowLeft
+                size={20}
+                className="group-hover:-translate-x-1 transition-transform duration-300"
+              />
+              <span className="text-sm font-medium">Volver</span>
+            </button>
 
-          <div className="flex items-center gap-2">
-            <div className={`text-transparent bg-clip-text bg-gradient-to-r ${current.accent}`}>
-              {current.icon}
+            <div className="h-4 w-px bg-white/10 mx-2" />
+
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-16 h-10 rounded-xl bg-gradient-to-br ${current.accent} p-px overflow-hidden shadow-lg`}
+              >
+                <div className="w-full h-full bg-black flex items-center justify-center">
+                  <img src={current.img} alt={current.name} className="w-full h-full object-cover" />
+                </div>
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-white leading-none mb-0.5">
+                  {current.name}
+                </h1>
+                <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest leading-none">
+                  {current.subtitle}
+                </p>
+              </div>
             </div>
-            <span className="text-sm font-semibold text-white">{current.name}</span>
-            <span className="text-xs text-zinc-500 hidden sm:inline">— {current.description}</span>
           </div>
 
-          <div className="w-20" /> {/* Spacer for centering */}
-        </motion.header>
+          <div className="hidden md:flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
+            <button
+              onClick={() => switchMode('habisim')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
+                mode === 'habisim'
+                  ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              HabiSim
+            </button>
+            <button
+              onClick={() => switchMode('hipotsim')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${
+                mode === 'hipotsim'
+                  ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              HipotSim
+            </button>
+          </div>
+        </header>
 
-        {/* Chat area */}
-        <div className="flex-1 overflow-y-auto" ref={scrollRef}>
-          <div className="max-w-3xl mx-auto px-6 lg:px-8 py-10 space-y-6">
-            {/* HabiSim banner image */}
-            {mode === 'habisim' && messages.length === 0 && !isLoading && (
+        <div className="flex-1 overflow-y-auto p-6 lg:p-12 custom-scrollbar" ref={scrollRef}>
+          <div className="max-w-3xl mx-auto space-y-8">
+            {messages.length === 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.6 }}
-                className="relative w-full h-48 rounded-2xl overflow-hidden border border-white/8"
-              >
-                <img
-                  src="/img/diputados.png"
-                  alt="Congreso de los Diputados"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute bottom-4 left-5">
-                  <p className="text-xs text-zinc-400 uppercase tracking-wider">Simulador legislativo</p>
-                  <p className="text-lg font-bold text-white">HabiSim</p>
-                </div>
-              </motion.div>
-            )}
-            {/* HipotSim banner image */}
-            {mode === 'hipotsim' && messages.length === 0 && !isLoading && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.6 }}
-                className="relative w-full h-48 rounded-2xl overflow-hidden border border-white/8"
-              >
-                <img
-                  src="/img/hipoteca.png"
-                  alt="Simulador de hipotecas"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute bottom-4 left-5">
-                  <p className="text-xs text-zinc-400 uppercase tracking-wider">Simulador de hipotecas</p>
-                  <p className="text-lg font-bold text-white">HipotSim</p>
-                </div>
-              </motion.div>
-            )}
-            {/* Welcome message */}
-            {messages.length === 0 && !isLoading && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
-                className="text-center py-16"
+                className="text-center py-12"
               >
                 <div
-                  className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${current.accent} flex items-center justify-center mx-auto mb-6 shadow-lg`}
+                  className={`w-full max-w-2xl aspect-[21/9] rounded-3xl bg-gradient-to-br ${current.accent} mx-auto mb-8 p-px overflow-hidden shadow-2xl flex items-center justify-center`}
                 >
-                  {React.cloneElement(current.icon, {
-                    size: 28,
-                    className: 'text-black',
-                  })}
+                  <img src={current.img} alt={current.name} className="w-full h-full object-cover rounded-3xl" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">{current.name}</h2>
-                <p className="text-zinc-400 text-sm max-w-md mx-auto">
-                  {mode === 'habisim'
-                    ? 'Introduce las leyes que quieres simular y ajusta los parámetros para ver su impacto en el mercado de vivienda.'
-                    : 'Cuéntame sobre tu situación y te ayudaré a simular la hipoteca ideal para ti, paso a paso.'}
+                <h2 className="text-3xl font-bold text-white mb-3">
+                  Bienvenido a {current.name}
+                </h2>
+                <p className="text-zinc-400 max-w-md mx-auto text-sm leading-relaxed">
+                  {current.description}
                 </p>
               </motion.div>
             )}
 
-            {/* Messages */}
-            {messages.map((msg, idx) => (
+            {messages.map((msg, i) => (
               <motion.div
-                key={idx}
+                key={i}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                {msg.role === 'user' ? (
-                  <div>
-                    <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">
-                      Tu simulación
-                    </p>
-                    <div className="bg-white/5 border border-white/8 rounded-2xl px-5 py-4 text-white/90 text-sm whitespace-pre-wrap">
-                      {msg.text}
-                    </div>
+                <div className="flex items-center gap-2 mb-3">
+                  <div
+                    className={`w-8 h-8 rounded-full ${
+                      msg.role === 'user'
+                        ? 'bg-white/10'
+                        : `bg-gradient-to-br ${current.accent}`
+                    } flex items-center justify-center`}
+                  >
+                    {msg.role === 'user' ? (
+                      <Users size={14} className="text-white" />
+                    ) : (
+                      <img src={current.img} alt={current.name} className="w-full h-full object-cover rounded-full" />
+                    )}
                   </div>
-                ) : (
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <div
-                        className={`w-8 h-8 rounded-full bg-gradient-to-br ${current.accent} flex items-center justify-center`}
-                      >
-                        {React.cloneElement(current.icon, {
-                          size: 14,
-                          className: 'text-black',
-                        })}
-                      </div>
-                      <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                        {current.name}
-                      </p>
-                    </div>
-                    <div className="bg-white/[0.02] border border-white/6 rounded-2xl px-6 py-6 text-white/85 text-[15px] leading-relaxed backdrop-blur-sm">
-                      {renderText(msg.text)}
-                    </div>
-                  </div>
-                )}
+                  <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                    {msg.role === 'user' ? 'Tú' : current.name}
+                  </p>
+                </div>
+                <div
+                  className={`border rounded-2xl px-6 py-6 text-white/85 text-[15px] leading-relaxed backdrop-blur-sm ${
+                    msg.role === 'user'
+                      ? 'bg-white/[0.03] border-white/10 ml-12'
+                      : 'bg-white/[0.02] border-white/6 mr-12'
+                  }`}
+                >
+                  {renderText(msg.text)}
+                </div>
               </motion.div>
             ))}
 
-            {/* Loading */}
-            {isLoading && (
+            {isLoading && !isTyping && (
               <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 className="flex items-center gap-3"
               >
                 <div
-                  className={`w-8 h-8 rounded-full bg-gradient-to-br ${current.accent} flex items-center justify-center`}
+                  className={`w-8 h-8 rounded-full bg-gradient-to-br ${current.accent} flex items-center justify-center overflow-hidden`}
                 >
-                  {React.cloneElement(current.icon, {
-                    size: 14,
-                    className: 'text-black',
-                  })}
+                  <img src={current.img} alt={current.name} className="w-full h-full object-cover" />
                 </div>
-                <div className="flex items-center gap-2">
-                  <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                    {current.name} está simulando
+                <div className="flex items-center gap-1.5 px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                  <p className="text-xs text-zinc-500 font-medium animate-pulse">
+                    Procesando simulación
                   </p>
                   <motion.div
                     animate={{ opacity: [0.4, 1, 0.4] }}
@@ -391,7 +356,6 @@ const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack }
               </motion.div>
             )}
 
-            {/* Typing */}
             {isTyping && displayedText && (
               <motion.div
                 initial={{ opacity: 0, y: 15 }}
@@ -400,12 +364,9 @@ const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack }
               >
                 <div className="flex items-center gap-2 mb-3">
                   <div
-                    className={`w-8 h-8 rounded-full bg-gradient-to-br ${current.accent} flex items-center justify-center`}
+                    className={`w-8 h-8 rounded-full bg-gradient-to-br ${current.accent} flex items-center justify-center overflow-hidden`}
                   >
-                    {React.cloneElement(current.icon, {
-                      size: 14,
-                      className: 'text-black',
-                    })}
+                    <img src={current.img} alt={current.name} className="w-full h-full object-cover" />
                   </div>
                   <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
                     {current.name}
@@ -422,22 +383,19 @@ const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack }
               </motion.div>
             )}
 
-            {/* Error */}
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-red-500/10 border border-red-500/30 rounded-2xl px-5 py-4 text-red-300 text-sm"
               >
-                ⚠️ {error}. Demasiados intentos para la API gratuita, esto es solo una demo ;).
+                ⚠️ {error}
               </motion.div>
             )}
           </div>
         </div>
 
-        {/* Bottom section */}
         <div className="border-t border-white/5 bg-black/60 backdrop-blur-xl">
-          {/* HabiSim collapsible parameters */}
           <AnimatePresence>
             {mode === 'habisim' && showParams && (
               <motion.div
@@ -447,106 +405,107 @@ const Simulador: React.FC<SimuladorProps> = ({ initialMode = 'habisim', onBack }
                 transition={{ duration: 0.3 }}
                 className="overflow-hidden border-b border-white/5"
               >
-                <div className="max-w-3xl mx-auto px-6 lg:px-8 py-4">
-                  <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">
-                    Parámetros manuales
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs text-zinc-400 mb-1 block">
-                        Renta media anual (€)
-                      </label>
-                      <input
-                        type="number"
-                        value={rentaMedia}
-                        onChange={(e) => setRentaMedia(e.target.value)}
-                        placeholder="Ej: 25000"
-                        className="w-full py-2.5 px-3 text-sm text-white placeholder:text-zinc-600 bg-white/5 border border-white/8 rounded-xl outline-none focus:border-cyan-500/40 transition-all duration-300"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-zinc-400 mb-1 block">
-                        Precio medio anual (€)
-                      </label>
-                      <input
-                        type="number"
-                        value={precioMedio}
-                        onChange={(e) => setPrecioMedio(e.target.value)}
-                        placeholder="Ej: 180000"
-                        className="w-full py-2.5 px-3 text-sm text-white placeholder:text-zinc-600 bg-white/5 border border-white/8 rounded-xl outline-none focus:border-cyan-500/40 transition-all duration-300"
-                      />
-                    </div>
+                <div className="max-w-3xl mx-auto px-6 lg:px-8 py-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Settings size={14} className="text-cyan-400" />
+                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                      Parámetros Macroeconómicos de la Simulación
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {HABISIM_PARAMS_CONFIG.map((param) => (
+                      <div key={param.id}>
+                        <label className="text-[10px] font-bold text-zinc-500 mb-1 block uppercase tracking-tight">
+                          {param.label}
+                        </label>
+                        <input
+                          type="number"
+                          value={hParams[param.id] || ''}
+                          max={param.max}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value);
+                            if (param.max && val > param.max) return;
+                            setHParams({...hParams, [param.id]: e.target.value});
+                          }}
+                          placeholder={`Ej: ${param.placeholder}`}
+                          className="w-full py-2 px-3 text-xs text-white placeholder:text-zinc-600 bg-white/5 border border-white/10 rounded-xl outline-none focus:border-cyan-500/40 focus:bg-white/[0.08] transition-all duration-300"
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Input bar + mode switcher */}
-          <div className="px-6 lg:px-12 py-4">
-            <div className="max-w-3xl mx-auto">
-              {/* HabiSim params toggle */}
-              {mode === 'habisim' && (
-                <button
-                  type="button"
-                  onClick={() => setShowParams(!showParams)}
-                  className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-cyan-300 transition-colors duration-300 mb-3 cursor-pointer"
-                >
-                  <ChevronDown
-                    size={14}
-                    className={`transition-transform duration-300 ${showParams ? 'rotate-180' : ''}`}
+          <footer className="max-w-3xl mx-auto px-6 lg:px-8 py-6">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex-1 relative">
+                  <textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        if (prompt.trim() && !isLoading) sendMessage(prompt);
+                      }
+                    }}
+                    placeholder={current.placeholder}
+                    className="w-full bg-white/[0.05] border border-white/10 rounded-2xl py-4 pl-6 pr-32 text-white placeholder:text-zinc-500 outline-none focus:border-white/20 transition-all duration-300 resize-none min-h-[56px] max-h-32 text-sm"
+                    rows={1}
                   />
-                  {showParams ? 'Ocultar parámetros' : 'Parámetros manuales'}
-                </button>
-              )}
-
-              <form onSubmit={handleSubmit} className="flex items-center gap-3">
-                <input
-                  type="text"
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder={current.placeholder}
-                  disabled={isLoading || isTyping}
-                  className="w-full py-3 px-4 text-sm text-white placeholder:text-zinc-600 bg-white/5 border border-white/8 rounded-xl outline-none focus:border-cyan-500/40 transition-all duration-300 disabled:opacity-40"
-                />
-                <button
-                  type="submit"
-                  disabled={isLoading || isTyping || !prompt.trim()}
-                  className={`flex-shrink-0 bg-gradient-to-r ${current.accent} text-black p-3 rounded-xl hover:brightness-110 transition-all duration-300 hover:scale-105 cursor-pointer disabled:opacity-40 disabled:hover:scale-100`}
-                >
-                  <Send size={18} />
-                </button>
-              </form>
-
-              {/* Mode switcher */}
-              <div className="flex items-center gap-3 mt-4">
-                <button
-                  type="button"
-                  onClick={() => switchMode(mode === 'habisim' ? 'hipotsim' : 'habisim')}
-                  className="group flex items-center gap-2 text-xs text-zinc-500 hover:text-white transition-colors duration-300 cursor-pointer"
-                >
-                  <ArrowLeftRight
-                    size={14}
-                    className="group-hover:rotate-180 transition-transform duration-500"
-                  />
-                  Cambiar a{' '}
-                  <span className="font-semibold text-zinc-300 group-hover:text-cyan-300 transition-colors">
-                    {mode === 'habisim' ? 'HipotSim' : 'HabiSim'}
-                  </span>
-                </button>
-
-                {/* Active mode indicator */}
-                <div className="flex items-center gap-1.5 ml-auto">
-                  <div
-                    className={`w-2 h-2 rounded-full bg-gradient-to-r ${current.accent} animate-pulse`}
-                  />
-                  <span className="text-xs text-zinc-500">
-                    Modo activo: <span className="text-zinc-300">{current.name}</span>
-                  </span>
+                  <button
+                    onClick={() => prompt.trim() && !isLoading && sendMessage(prompt)}
+                    disabled={!prompt.trim() || isLoading}
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 rounded-xl flex items-center gap-2 transition-all duration-300 ${
+                      prompt.trim() && !isLoading
+                        ? `bg-gradient-to-br ${current.accent} text-black shadow-lg shadow-cyan-500/20`
+                        : 'bg-white/5 text-zinc-600 cursor-not-allowed'
+                    }`}
+                  >
+                    {mode === 'habisim' ? (
+                      <>
+                        <span className="text-xs font-bold uppercase tracking-wider">Simular</span>
+                        <Play size={16} fill="black" />
+                      </>
+                    ) : (
+                      <Send size={18} />
+                    )}
+                  </button>
                 </div>
               </div>
+
+              <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-4">
+                  {mode === 'habisim' && (
+                    <button
+                      onClick={() => setShowParams(!showParams)}
+                      className={`flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 ${
+                        showParams ? 'text-cyan-400' : 'text-zinc-500 hover:text-white'
+                      }`}
+                    >
+                      <ChevronDown
+                        size={16}
+                        className={`transition-transform duration-300 ${
+                          showParams ? 'rotate-180' : ''
+                        }`}
+                      />
+                      {showParams ? 'Ocultar Parámetros' : 'Ver Parámetros Avanzados'}
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => switchMode(mode === 'habisim' ? 'hipotsim' : 'habisim')}
+                  className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-zinc-500 hover:text-white transition-colors duration-300"
+                >
+                  <ArrowLeftRight size={16} />
+                  Cambiar a {mode === 'habisim' ? 'HipotSim' : 'HabiSim'}
+                </button>
+              </div>
             </div>
-          </div>
+          </footer>
         </div>
       </div>
     </motion.div>

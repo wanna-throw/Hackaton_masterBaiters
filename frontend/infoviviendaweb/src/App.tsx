@@ -7,11 +7,14 @@ import ComoFunciona from './components/ComoFunciona';
 import Footer from './components/Footer';
 import Simulador from './components/Simulador';
 import Dashboard from './components/Dashboard';
+import SimulationResults from './components/SimulationResults';
 
 export default function App() {
   const [showSimulador, setShowSimulador] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
+  const [showSimulationResults, setShowSimulationResults] = useState(false);
   const [simMode, setSimMode] = useState<'habisim' | 'hipotsim'>('habisim');
+  const [simulationData, setSimulationData] = useState<{ laws: string, params: any } | null>(null);
 
   const openSimulador = (mode: 'habisim' | 'hipotsim' = 'habisim') => {
     setSimMode(mode);
@@ -20,6 +23,12 @@ export default function App() {
 
   const openDashboard = () => {
     setShowDashboard(true);
+  };
+
+  const handleStartSimulation = (laws: string, params: any) => {
+    setSimulationData({ laws, params });
+    setShowSimulador(false);
+    setShowSimulationResults(true);
   };
 
   return (
@@ -44,6 +53,7 @@ export default function App() {
           <Simulador
             initialMode={simMode}
             onBack={() => setShowSimulador(false)}
+            onSimulate={handleStartSimulation}
           />
         )}
       </AnimatePresence>
@@ -53,6 +63,16 @@ export default function App() {
         {showDashboard && (
           <Dashboard
             onBack={() => setShowDashboard(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Simulation Results Overlay */}
+      <AnimatePresence>
+        {showSimulationResults && simulationData && (
+          <SimulationResults 
+            data={simulationData}
+            onBack={() => setShowSimulationResults(false)}
           />
         )}
       </AnimatePresence>
