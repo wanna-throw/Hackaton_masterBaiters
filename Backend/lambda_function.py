@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-HF_TOKEN = "token"
+HF_TOKEN = ""
 LLM_API_URL = "https://api-inference.huggingface.co/models/modelo-llm"
 PREDICT_API_URL = "https://api-inference.huggingface.co/models/modelo-predictivo"
 
