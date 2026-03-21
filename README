@@ -1,11 +1,83 @@
-Webapp InfoVivienda Hackaton IA 2026
+Nom del prototip: InfoVivienda
 
-Estructura del proyecto
+Imatge de presentació:
 
-InfoVivienda
-|
-|-------- /frontend
-|
-|-------- /backend
-|
-/.env
+![alt text](image.png)
+
+Entitat del repte:
+Càtedra UNESCO d'Habitatge de la URV
+
+MasterBaiters:
+
+Arnau Sole De La Cruz
+mobilarnau@gmail.com
+elBuenManolo
+
+Dario Alexander Plesa Plesa
+pdarioalexander@gmail.com
+wanna-throw
+
+Brenda Puig Pulido
+brpuig05@gmail.com
+gambacanastando
+
+Sergi Molina Sanchez
+sergims65@gmail.com
+FRESKIS
+
+Reptes abordats:
+1. Crear una herramienta para conocer mas a fondo el impacto de posibles leyes
+2. Proporcionar una interifaz mas vistosa que facilite la recolecta de informacion
+
+Descripció curta del projecte (màx. 50 paraules):
+
+InfoVivienda es una aplicación web interactiva que sirve para analizar el impacto de las leyes en el mercado inmobiliario. Mediante el uso de inteligencias artificiales y herramientas generativas, permite predecir cómo las normativas afectarán al precio de compra y alquiler de las viviendas.
+
+La finalidad es ayudar tanto a los ciudadanos como a las instituciones a entender las fluctuaciones del derecho de habitaje de manera visual.
+
+
+Descripció llarga del projecte (màx. 250 paraules):
+
+InfoVivienda se ha creado a partir de la necesidad de informar a la ciudadanía y las instituciones de una herramienta de previsión y predicción ante el impacto que las decisiones legislativas tienen sobre el mercado inmobiliario. En concreto, el problema que tratamos de enfrentar es la falta de claridad sobre cómo una nueva ley puede alterar el precio del alquiler o la disponibilidad de habitaje a medio término, generando incertidumbre social.
+
+
+
+Nuestra solución:
+
+Hemos desarrollado una arquitectura optimizada, garantizando la máxima velocidad y privacidad de los datos. El sistema se basa en tres pilares tecnológicos:
+
+ 
+Simulación integrada Contamos con un motor de simulación propio, analizando variables económicas para proyectar el impacto de las leyes en el valor de la propiedad.
+
+ 
+Inteligencia artificial híbrida: Combinamos un asistente general con la API de Gemini para desarrollar el texto de las leyes. Esta combinación permite transformar teoría legal en datos comprensibles para los ciudadanos e instituciones.
+
+ 
+Ecosistema de servicios Usamos una estructura con dos back-ends que gestionan el flujo de información desde el front-end a las diferentes simulaciones.
+
+El resultado final ha sido una aplicación web interactiva donde cualquier usuario puede simular una ley y visualizar gráficamente sus consecuencias, democratizando el análisis de datos para proteger el derecho a un habitaje digno.
+
+
+
+Tecnologies utilitzades:
+Python
+Cloud Tensor Computing
+AWS
+Docker
+Hugging-Face
+React
+Node.js
+Tensor-FLow
+Google Collab
+Gemini
+Antigravity
+
+Llenguatges de programació
+Frameworks i llibreries
+Eines i plataformes
+
+Sistema Implementat:
+
+![alt text](image.png)
+
+Projecte desenvolupat com a part de la Hackató Cloud Computing 2026, organitzada per la Universitat Rovira i Virgili i T-Systems.
